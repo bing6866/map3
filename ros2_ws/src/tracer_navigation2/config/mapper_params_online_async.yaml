@@ -1,0 +1,16 @@
+slam_toolbox:
+  ros__parameters:
+    mode: mapping            # mapping 或 localization
+    map_frame: map
+    odom_frame: odom
+    base_frame: base_link
+    scan_topic: /scan
+    map_file_name: my_map    # 用于序列化/保存posegraph
+    use_map_saver: true
+    use_sim_time: true       # 如果你在仿真里
+    transform_tolerance: 1.0
+    max_laser_range: 30.0
+    # ... 其它高阶参数（solver, loop closure, etc.）按需调整
+#ros2 launch slam_toolbox online_async_launch.py slam_params_file:=/home/bing6866/work/songling/ros2_ws/src/tracer_description/config/mapper_params_online_async.yaml use_sim_time:=true
+#ros2 launch slam_toolbox online_async_launch.py slam_params_file:=src/tracer_description/config/mapper_params_online_async.yaml use_sim_time:=true
+#使用上面的命令启动SLAM工具箱，确保路径正确指向此YAML文件。

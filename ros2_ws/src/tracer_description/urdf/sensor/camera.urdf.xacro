@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="camera_xacro" params="xyz">
+        <!-- ============相机模块================ -->
+        <link name="camera_link">
+            <visual>
+                <origin xyz="0 0 0.0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.02 0.10 0.02" />
+                </geometry>
+                <material name="black">
+                    <color rgba="0.0 0.0 0.0 0.8"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0.0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.02 0.10 0.02" />
+                </geometry>
+                <material name="black">
+                    <color rgba="0.0 0.0 0.0 0.8"/>
+                </material>
+            </collision>
+            <!-- <xacro:box_inertia m="0.01" w="0.02" h="0.10" d="0.02" /> -->
+        </link>
+        <link name="camera_optical_link"></link>
+        <joint name="camera_optical_joint" type="fixed">
+            <parent link="camera_link" />
+            <child link="camera_optical_link" />
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}" />
+        </joint>
+
+        <joint name="camera_joint" type="fixed">
+            <parent link="base_link" />
+            <child link="camera_link" />
+            <origin xyz="${xyz}" />
+        </joint>
+
+
+    <!-- ========================================================== -->
+    <!-- 2. 关键部分：Gazebo 传感器插件配置 -->
+    <!-- ========================================================== -->
+        <gazebo reference="camera_link">
+        <sensor type="depth" name="camera_sensor">
+            <plugin name="depth_camera" filename="libgazebo_ros_camera.so">
+                <frame_name>camera_optical_link</frame_name>
+            </plugin>
+            <always_on>true</always_on>
+            <update_rate>10</update_rate>
+            <camera name="camera">
+                <horizontal_fov>1.5009831567</horizontal_fov>
+                <image>
+                    <width>800</width>
+                    <height>600</height>
+                    <format>R8G8B8</format>
+                </image>
+                <distortion>
+                    <k1>0.0</k1>
+                    <k2>0.0</k2>
+                    <k3>0.0</k3>
+                    <p1>0.0</p1>
+                    <p2>0.0</p2>
+                    <center>0.5 0.5</center>
+                </distortion>
+            </camera>
+        </sensor>
+    </gazebo>
+
+
+    </xacro:macro>
+
+</robot>

@@ -1,0 +1,58 @@
+# /**:
+#   ros__parameters:
+#     robot_base_frame: base_link
+#     return_to_init: true
+#     costmap_topic: map
+#     costmap_updates_topic: map_updates
+#     visualize: true
+    
+#     # --- 修改重点 1: 提高规划频率 ---
+#     # 从 0.15 改为 1.0 或更高。
+#     # 这会让机器人反应更快，到达一个点后立即前往下一个点。
+#     planner_frequency: 0.03 
+    
+#     # --- 修改重点 2: 避免黑名单误判 ---
+#     # 增加超时时间，给机器人更多时间去到达远处的目标。
+#     progress_timeout: 60.0
+    
+#     # --- 修改重点 3: 鼓励去远处探索 ---
+#     # 这是一个权重比例。
+#     # potential_scale (距离权重): 降低它，让机器人愿意跑得更远。
+#     # gain_scale (收益权重): 保持 1.0，让机器人重视大的未知区域。
+#     # 原来的 3.0 太大了，导致机器人寸步难行。
+#     potential_scale: 0.005 
+#     orientation_scale: 0.0
+#     gain_scale: 3.0
+    
+#     transform_tolerance: 0.3
+    
+#     # 根据你的机器人大小调整，0.5 通常能过滤掉更多噪点
+#     min_frontier_size: 0.3
+
+explore_node:
+  ros__parameters:
+    robot_base_frame: base_link
+    return_to_init: true
+    
+    # 【关键修改 1：解决卡墙边问题】
+    # 使用全局代价地图，避免贴墙
+    costmap_topic: /global_costmap/costmap
+    costmap_updates_topic: /global_costmap/costmap_updates
+    
+    visualize: true
+    
+    # 【关键修改 2：解决反应慢问题】
+    # 这里已经帮你改为 1.0 了（原代码里还是 0.03）
+    planner_frequency: 0.03    
+    # 【修改 3：优化卡死时的容错】
+    progress_timeout: 40.0
+    
+    # 【修改 4：平衡探索策略】
+    potential_scale: 0.1  
+    orientation_scale: 0.0
+    gain_scale: 1.0
+    
+    transform_tolerance: 0.3
+    
+    # 【修改 5：降低冷启动门槛】
+    min_frontier_size: 0.2

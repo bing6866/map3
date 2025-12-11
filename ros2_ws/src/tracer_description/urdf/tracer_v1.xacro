@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<robot name="tracer_v1" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="robot_namespace" default="/" />
+    
+    <xacro:property name="ns" value="$(arg robot_namespace)" />
+    <xacro:property name="tf_prefix" value="${ns}" />
+    <xacro:if value="${ns == '/' or ns == ''}">
+        <xacro:property name="tf_prefix" value="" />
+    </xacro:if>
+    <xacro:unless value="${ns == '/' or ns == ''}">
+        <xacro:property name="tf_prefix" value="${ns}/" />
+    </xacro:unless>
+
+    <xacro:arg name="urdf_extras" default="empty.urdf" />
+
+    <!-- 包含文件 -->
+    <xacro:include filename="$(find tracer_description)/urdf/tracer_wheel_1.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/tracer_wheel_2.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/fr_castor.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/fl_castor.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/rr_castor.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/rl_castor.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/fr_wheel.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/fl_wheel.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/rr_wheel.xacro" />
+    <xacro:include filename="$(find tracer_description)/urdf/rl_wheel.xacro" />
+
+    <!-- 变量定义 -->
+    <xacro:property name="wheelbase" value="0.34"/>
+    <xacro:property name="track" value="0.37910" />
+    <xacro:property name="wheel_vertical_offset" value="-0.082" />
+    <xacro:property name="castor_offset" value="0.03" />
+
+    <!-- 核心 Links -->
+    <link name="${tf_prefix}base_footprint"/>
+
+    <joint name="${tf_prefix}base_footprint_joint" type="fixed">
+        <parent link="${tf_prefix}base_footprint"/>
+        <child link="${tf_prefix}base_link"/>
+        <origin xyz="0 0 0.01" rpy="0 0 0"/>  
+    </joint>               
+
+    <link name="${tf_prefix}base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="1.57 0 0"/>
+            <geometry>
+                <mesh filename="file://$(find tracer_description)/meshes/tracer_base_link_no_wheel.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="1.57 0 0"/>
+            <geometry>
+                <mesh filename="file://$(find tracer_description)/meshes/tracer_base_link_no_wheel.dae" />
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="${tf_prefix}inertial_link">
+        <inertial>
+            <mass value="132.3898489950015" />
+            <origin xyz="0.015 0.0231316650320557 0" />
+            <inertia ixx="0.185196122711036" ixy="4.30e-08" ixz="5.81e-08" iyy="0.36489" iyz="-0.00038" izz="0.22386" />
+        </inertial>
+    </link>
+
+    <joint name="${tf_prefix}inertial_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="${tf_prefix}base_link" />
+        <child link="${tf_prefix}inertial_link" />
+    </joint>
+
+    <!-- 驱动轮 -->
+    <xacro:tracer_wheel_1 wheel_prefix="${tf_prefix}right" parent="${tf_prefix}base_link">
+        <origin xyz="0 ${-wheelbase/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    </xacro:tracer_wheel_1>
+    
+    <xacro:tracer_wheel_2 wheel_prefix="${tf_prefix}left" parent="${tf_prefix}base_link">
+        <origin xyz="0 ${wheelbase/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+    </xacro:tracer_wheel_2>
+
+    <!-- 
+       ======================================================================
+       Castor Wheels (支撑轮)
+       注意：这里必须把 castor_offset 等计算好的坐标传进去
+       ====================================================================== 
+    -->
+
+    <!-- FL Castor -->
+    <xacro:fl_castor wheel_prefix="${tf_prefix}fl_castor" parent="${tf_prefix}base_link">
+        <origin xyz="${track/2} ${wheelbase/2} ${castor_offset-0.0528886}" rpy="-1.57 0 0" />
+    </xacro:fl_castor>
+    
+    <!-- FL Wheel (连接到 FL Castor 的 Link 上) -->
+    <!-- 这里的 parent 是 ${tf_prefix}fl_castor_link，因为 fl_castor 宏内部生成的 Link 是 ${wheel_prefix}_link -->
+    <xacro:fl_wheel wheel_prefix="${tf_prefix}fl" parent="${tf_prefix}fl_castor_link">
+        <origin xyz="-0.0218084 ${-wheel_vertical_offset-0.0150} 0" rpy="0 0 0" />
+    </xacro:fl_wheel>
+
+
+    <!-- FR Castor & Wheel (你需要确保 fr_castor.xacro 和 fr_wheel.xacro 也做了同样的 params 修改) -->
+    <xacro:fr_castor wheel_prefix="${tf_prefix}fr_castor" parent="${tf_prefix}base_link">
+        <origin xyz="${track/2} ${-wheelbase/2} ${castor_offset-0.0528886}" rpy="-1.57 0 0" />
+    </xacro:fr_castor>
+    
+    <xacro:fr_wheel wheel_prefix="${tf_prefix}fr" parent="${tf_prefix}fr_castor_link">
+        <origin xyz="-0.0218084 ${-wheel_vertical_offset-0.0150} 0" rpy="0 0 0" />
+    </xacro:fr_wheel>
+
+
+    <!-- RR Castor & Wheel -->
+    <xacro:rr_castor wheel_prefix="${tf_prefix}rr_castor" parent="${tf_prefix}base_link">
+        <origin xyz="${-track/2} ${-wheelbase/2} ${castor_offset-0.0528886}" rpy="-1.57 0 0" />
+    </xacro:rr_castor>
+
+    <xacro:rr_wheel wheel_prefix="${tf_prefix}rr" parent="${tf_prefix}rr_castor_link">
+        <origin xyz="-0.0218084 ${-wheel_vertical_offset-0.0150} 0" rpy="0 0 0" />
+    </xacro:rr_wheel>
+
+
+    <!-- RL Castor & Wheel -->
+    <xacro:rl_castor wheel_prefix="${tf_prefix}rl_castor" parent="${tf_prefix}base_link">
+        <origin xyz="${-track/2} ${wheelbase/2} ${castor_offset-0.0528886}" rpy="-1.57 0 0" />
+    </xacro:rl_castor>
+
+    <xacro:rl_wheel wheel_prefix="${tf_prefix}rl" parent="${tf_prefix}rl_castor_link">
+        <origin xyz="-0.0218084 ${-wheel_vertical_offset-0.0150} 0" rpy="0 0 0" />
+    </xacro:rl_wheel>
+
+    <!-- Sensors -->
+    <xacro:include filename="$(find tracer_description)/urdf/sensor/laser.urdf.xacro" />
+    
+    <xacro:laser_xacro 
+        x="0.305" y="0" z="0.016" 
+        robot_namespace="$(arg robot_namespace)"
+        parent="${tf_prefix}base_link"
+        frame_prefix="${tf_prefix}"  />
+     
+    <xacro:include filename="$(arg urdf_extras)" />
+    <xacro:include filename="$(find tracer_description)/urdf/tracer.gazebo" />
+</robot>

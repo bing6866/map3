@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- 宏参数拆分为x、y、z三个分量，避免坐标格式错误 -->
+    <xacro:macro name="laser_xacro" params="x y z robot_namespace parent:='base_link' frame_prefix:=''">
+        <gazebo reference="${frame_prefix}laser_link">
+            <material>Gazebo/Black</material>
+        </gazebo>
+
+        <!-- 雷达link -->
+        <link name="${frame_prefix}laser_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="0.02" radius="0.02" />
+                </geometry>
+                <material name="black">
+                    <color rgba="0.0 0.0 0.0 0.8" />
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <cylinder length="0.02" radius="0.02" />
+                </geometry>
+                <material name="black">
+                    <color rgba="0.0 0.0 0.0 0.8" />
+                </material>
+            </collision>
+            <!-- <xacro:cylinder_inertia m="0.03" r="0.02" h="0.02" /> -->
+        </link>
+
+        <!-- 雷达直接连接到底座，坐标为 (x, y, z + 0.05)，与原支撑杆顶端位置一致 -->
+        <joint name="${frame_prefix}laser_joint" type="fixed">
+            <parent link="${parent}"/> 
+            <child link="${frame_prefix}laser_link"/>
+            <origin xyz="${x} ${y} ${z + 0.05}" />  <!-- 正确的3个坐标值 -->
+        </joint>
+
+
+    <!-- ========================================================== -->
+    <!-- 2. 关键部分：Gazebo 传感器插件配置 -->
+    <!-- ========================================================== -->
+
+        <gazebo reference="${frame_prefix}laser_link">
+            <!-- 1. 修改 sensor type 为 gpu_ray -->
+            <sensor name="laser_sensor" type="ray">
+                
+                <plugin name="laserscan" filename="libgazebo_ros_ray_sensor.so">
+                    <ros>
+                        <namespace>${robot_namespace}</namespace>
+                        <remapping>~/out:=scan</remapping>
+                    </ros>
+                    <output_type>sensor_msgs/LaserScan</output_type>
+                    <frame_name>${frame_prefix}laser_link</frame_name>
+                </plugin>
+                
+                <always_on>true</always_on>
+                
+                <visualize>true</visualize> 
+                <update_rate>15</update_rate>
+                <pose>0 0 0 0 0 0</pose>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <!-- 3. 如果还是卡，尝试把采样点从 360 降低到 180 -->
+                            <samples>360</samples> 
+                            <resolution>1.000000</resolution>
+                            <min_angle>0.000000</min_angle>
+                            <max_angle>6.280000</max_angle>
+                        </horizontal>
+                    </scan>
+                    <range>
+                        <min>0.120000</min>
+                        <max>8.0</max>
+                        <resolution>0.015000</resolution>
+                    </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.01</stddev>
+                    </noise>
+                </ray>
+            </sensor>
+        </gazebo>
+
+    </xacro:macro>
+
+</robot>
